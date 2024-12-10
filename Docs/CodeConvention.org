@@ -1,0 +1,278 @@
+#+TITLE: Code Convention Phisilon
+
+#+AUTHOR: SqL
+
+This is the official styling guide for the team that will build the project Phisilon.
+A fun puzzle platformer that uses custom physics to create very fun experiences.
+
+#+TOC: headlines 1 2
+
+* Goals and Purpose
+
+  This guide establishes conventions to ensure readability, maintainability, and consistency across the project codebase. Following these conventions will simplify collaboration and reduce errors during development.
+
+* Code format
+
+  The code will use the K&r styling. This maximizes both the minimal amount of lines code will have. But will also keep the code clean.
+  Here are examples of things you will find in a code base with K&r styling. THIS SHOULD BE OBEYED AND RESPECTED.
+
+** K&r applied:
+
+   Use K&r format on everything. Also, in order to retain consistency in spacing. Use 4 tabs and 4 tabs only per indent level.
+   Also make sure that not only your tab width is 4 spaces. But translate your tabs to spaces.
+
+*** Class:
+
+   #+BEGIN_SRC csharp
+   namespace KnrExample; // Use top level namespace to save indent!
+
+   internal class Person { // { will be placed on the same line
+       private int age;
+       private string name;
+   }
+   #+END_SRC
+
+*** Function / Method:
+
+   #+BEGIN_SRC csharp
+   private int ShiftBitByOne(int i) {
+       return i << 1;
+   }
+
+   private int ShiftBitByTwo(int i) => i << 2
+
+   private int ShiftBitByThree(int i) => // Both are allowed. Use the third when dealing with longer expressions
+       i << 3
+   #+END_SRC
+
+*** Structs:
+
+   #+BEGIN_SRC csharp
+   struct Human {
+       string name;
+       uint age;
+       float length;
+
+       public Human(string pName, uint pAge, float pLength) {
+           name = pName;
+           age = pAge;
+           length = pLength;
+       }
+   }
+   #+END_SRC
+
+*** Conditional statements:
+
+    There are multiple conditional flows you can use in C#.
+    It is important that you understand how K&r styling will apply these.
+
+    If statements are the most common of them all.
+
+    #+BEGIN_SRC csharp
+    public void MovePlayer(KeyboardState kb, Transform pTransform) {
+        if (kstate.IsKeyDown(Keys.Up)) {
+            pTransform.Translate(new Vector2(0, -5));
+        } else if (kstate.IsKeyDown(Keys.Down)) {
+            pTransform.Translate(new Vector2(0, 5));
+        } else if (kstate.IsKeyDown(Keys.Left)) {
+            pTransform.Translate(new Vector2(-5, 0));
+        } else if (kstate.IsKeyDown(Keys.Right)) {
+            pTransform.Translate(new Vector2(5, 0));
+        } else {
+            pTransform.Translate(new Vector2(0, 0));
+        }
+    }
+    #+END_SRC
+
+    However sometimes, using switch statements for repetative checks can be a lot better,
+    this is because instead of flag checking you use a jump table to goto (yes seriously) to something:
+
+    #+BEGIN_SRC csharp
+
+    switch (true) {
+        case var _ when kstate.IsKeyDown(Keys.Up):
+            ballPosition.Y -= updatedBallSpeed;
+            break;
+
+        case var _ when kstate.IsKeyDown(Keys.Down):
+            ballPosition.Y += updatedBallSpeed;
+            break;
+
+        case var _ when kstate.IsKeyDown(Keys.Left):
+            ballPosition.X -= updatedBallSpeed;
+            break;
+
+        case var _ when kstate.IsKeyDown(Keys.Right):
+            ballPosition.X += updatedBallSpeed;
+            break;
+    }
+    #+END_SRC
+
+    if you preffer, you can also use a switch expression:
+
+    #+BEGIN_SRC csharp
+    ballPosition = kstate switch {
+        _ when kstate.IsKeyDown(Keys.Up) => new Vector2(ballPosition.X, ballPosition.Y - updatedBallSpeed),
+        _ when kstate.IsKeyDown(Keys.Down) => new Vector2(ballPosition.X, ballPosition.Y + updatedBallSpeed),
+        _ when kstate.IsKeyDown(Keys.Left) => new Vector2(ballPosition.X - updatedBallSpeed, ballPosition.Y),
+        _ when kstate.IsKeyDown(Keys.Right) => new Vector2(ballPosition.X + updatedBallSpeed, ballPosition.Y),
+        _ => ballPosition
+    };
+    #+END_SRC
+
+    Loops should also follow this rule (you probably know by now):
+
+    #+BEGIN_SRC csharp
+    List<int> CreateMatrix(int pDimension) {
+        List<int[]> Matrix = [];
+        
+        int = 0;
+        while (i < pDimension) {
+            int[] dim = new int[pDimension];
+            Matrix.Add(dim);
+            i++;
+        }
+
+        return Matrix;
+    }
+
+    void PrintSomething(string pSomething, int pTimes) {
+        for (int i = 0; i < pTimes; i++) {
+            Console.WriteLine(pSomething);
+        }
+    }
+    #+END_SRC
+
+** Naming for access modifiers:
+
+   To make clear what variables are accessable and which ones should not be accessable you name things based on:
+   - What they are: Function, class, variable
+   - Lifetime
+   - Access modifier
+
+*** Function classes and structs:
+
+    These by default should always use PascalCasing
+    #+BEGIN_SRC csharp
+    class Vector {
+
+        struct Content {
+            float x;
+            float y;
+        }
+
+        static Vector Zero() {
+            return (0,0)
+        }
+    } 
+    #+END_SRC
+
+*** Variables and Lifetimes:
+
+    For variables it can differ a lot.
+    Always add an access modifier to the variable!
+
+    public can and should only be used for getters and setters
+
+    #+BEGIN_SRC csharp
+    class Animal {
+        private string name; // private uses camalCasing
+        private const string GENDER = "man"; // All caps. Spaces are replaced with _
+        private const string ANIMAL_KINGDOM = "Parrot";
+        protected int classIndex // Same goes for private
+
+        public string Name => name; // public uses PascalCasing.
+        public string ClassIndex { get => classIndex; } // Also valid
+    }
+    #+END_SRC
+
+    Some variables will live longer on than others (very sad but that's nature).
+    To identify those variables you can use an optional _ prefix.
+    For example:
+
+    #+BEGIN_SRC csharp
+    void Gravity(Vector2 pVelocity, float _pGravity) {
+        time += (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+        if (time < coolDown)
+            pVelocity.Y += _pGravity;
+    }
+    #+END_SRC
+
+** File and Directory Structure
+
+   - Source files go in `src/`
+   - Assets go in `assets/`
+   - Tests go in `tests/`
+
+** Formatting Guidelines
+
+   - **Line Length**: Keep maximum line length to 100 characters for readability.
+   - **Whitespace Rules**: Use blank lines between methods and classes for clarity.
+   - Spaces around operators: Use `x = y + z;` instead of `x=y+z`.
+
+** Commenting Standards
+
+   - Use `///` for XML documentation.
+   - Inline comments sparingly using `//`
+   - Block comments (`/* */`) for method / Functions or complex logic explanations.
+
+   Example XML comment:
+
+   NOTE: Use XML only for complex logic, algorithms or mathematical functions
+   #+BEGIN_SRC csharp
+   /// <summary>
+   /// Multiplies a value by two.
+   /// </summary>
+   /// <param name="value">The value to multiply.</param>
+   /// <returns>The result of the multiplication.</returns>
+   public int MultiplyByTwo(int value) => value * 2;
+   #+END_SRC
+
+   Otherwise, use the C standard comment of (`/* */`)
+
+   #+BEGIN_SRC csharp
+   /*Multiply A value by two*/
+   public int MultiplyByTwo(int value) => value * 2;
+   #+END_SRC
+
+** Error Handling
+
+   - Log errors using the project’s logging framework.
+   - Avoid use of `try-catch` for performance and safety reasons, Use either print statements or Debuggers.
+
+** Naming Conventions for Special Elements
+
+   - **Enums**: Use PascalCase for enums and their members.
+
+     Example:
+
+     #+BEGIN_SRC csharp
+     public enum DaysOfWeek {
+         Monday,
+         Tuesday,
+         Wednesday
+     }
+     #+END_SRC
+
+   - **Events and Delegates**: Event names should use the PascalCase convention and be suffixed with `Event`. Delegate types should be prefixed with `On`.
+
+     Example:
+
+     #+BEGIN_SRC csharp
+     public delegate void OnPlayerMovedEventHandler(object sender, EventArgs e);
+     public event OnPlayerMovedEventHandler PlayerMovedEvent;
+     #+END_SRC
+
+** Collaboration Guidelines
+
+   - **Pull Request Reviews**: Ensure adherence to this guide before merging.
+   - **Commit Messages**: Format commit messages as follows:
+     - `[Feature] Add player movement logic`
+     - `[Bugfix] Fix collision detection issue`
+     - `[Refactor] Simplify gravity calculations`
+   - **Version Control**: Use Git hooks or linters to enforce the
+
+*** Naming of branches
+
+    Don't use capital letters in branches. Everything should be lowercase.
